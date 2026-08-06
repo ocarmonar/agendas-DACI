@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Citas · DACI · ISM</title>
+<style>
+  :root{
+    --azul:#12386b;
+    --azul-claro:#2f6fbf;
+    --acento:#f5a623;
+    --verde-wpp:#25d366;
+    --gris:#5a6472;
+    --bg:#eef2f7;
+    --card:#ffffff;
+    --borde:#d9e0ea;
+    --ok:#1e874b;
+    --error:#c23b3b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,#e8eef6 0%,#f4f7fb 100%);
+    color:#1f2733;
+    min-height:100vh;
+  }
+  header{
+    background:var(--azul);
+    color:#fff;
+    padding:22px 20px;
+    text-align:center;
+  }
+  header .logo-wrap{
+    display:inline-block;background:#fff;border-radius:12px;
+    padding:10px 18px;margin-bottom:12px;
+    box-shadow:0 4px 14px rgba(0,0,0,.15);
+  }
+  header .logo-img{display:block;height:46px;width:auto;}
+  header h1{margin:0;font-size:1.35rem;font-weight:700;}
+  header p{margin:6px 0 0;opacity:.85;font-size:.92rem;}
+  .wrap{max-width:640px;margin:0 auto;padding:22px 16px 60px;}
+  .card{
+    background:var(--card);border:1px solid var(--borde);
+    border-radius:16px;padding:22px;margin-bottom:18px;
+    box-shadow:0 6px 20px rgba(18,56,107,.06);
+  }
+  label{display:block;font-weight:600;font-size:.9rem;margin:14px 0 6px;color:#2a3543;}
+  .req{color:var(--error);}
+  input,select,textarea{
+    width:100%;padding:11px 12px;border:1px solid var(--borde);
+    border-radius:10px;font-size:1rem;font-family:inherit;background:#fbfcfe;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  input:focus,select:focus,textarea:focus{
+    outline:none;border-color:var(--azul-claro);
+    box-shadow:0 0 0 3px rgba(47,111,191,.15);
+  }
+  textarea{min-height:80px;resize:vertical;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .row>div{flex:1;min-width:150px;}
+  .campus-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .campus-tab{
+    flex:1;min-width:120px;padding:14px 8px;text-align:center;
+    border:1px solid var(--borde);border-radius:12px;cursor:pointer;
+    font-weight:700;font-size:.95rem;background:#fbfcfe;color:#2a3543;
+    user-select:none;transition:all .12s;
+  }
+  .campus-tab:hover{border-color:var(--azul-claro);}
+  .campus-tab.sel{background:var(--azul);color:#fff;border-color:var(--azul);box-shadow:0 4px 12px rgba(18,56,107,.18);}
+  .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-top:6px;}
+  .slot{
+    padding:10px 6px;text-align:center;border:1px solid var(--borde);
+    border-radius:10px;cursor:pointer;font-size:.92rem;background:#fbfcfe;
+    user-select:none;transition:all .12s;
+  }
+  .slot.libre{background:#e7f7ee;border-color:#8ed3aa;color:#176c3c;}
+  .slot.libre:hover{border-color:#3aa86a;box-shadow:0 2px 8px rgba(30,135,75,.15);}
+  .slot.sel{background:var(--azul);color:#fff;border-color:var(--azul);font-weight:700;}
+  .slot.taken{background:#fdeaea;border-color:#e39b9b;color:#b23b3b;cursor:not-allowed;text-decoration:line-through;}
+  .slot.taken:hover{border-color:#e39b9b;box-shadow:none;}
+  .leyenda{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:.8rem;color:var(--gris);}
+  .leyenda span{display:inline-flex;align-items:center;gap:6px;}
+  .punto{width:12px;height:12px;border-radius:3px;border:1px solid;}
+  .punto.libre{background:#e7f7ee;border-color:#8ed3aa;}
+  .punto.ocupado{background:#fdeaea;border-color:#e39b9b;}
+  .hint{font-size:.82rem;color:var(--gris);margin-top:6px;}
+  .btn{
+    display:block;width:100%;border:none;border-radius:12px;
+    padding:15px;font-size:1.05rem;font-weight:700;cursor:pointer;
+    margin-top:20px;transition:transform .08s,opacity .15s;
+  }
+  .btn:active{transform:scale(.99);}
+  .btn-primary{background:var(--azul);color:#fff;}
+  .btn-primary:hover{background:#0e2d57;}
+  .err-msg{color:var(--error);font-size:.85rem;margin-top:6px;display:none;}
+  .field-bad input,.field-bad select,.field-bad textarea{border-color:var(--error);}
+  /* Confirmación */
+  #confirm{display:none;}
+  .check{
+    width:64px;height:64px;border-radius:50%;background:var(--ok);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 14px;
+    color:#fff;font-size:34px;
+  }
+  .resumen{
+    background:#f4f8ff;border:1px solid #dbe7fb;border-radius:12px;
+    padding:14px 16px;margin:16px 0;font-size:.95rem;line-height:1.6;
+  }
+  .resumen b{color:var(--azul);}
+  .actions .btn{margin-top:12px;text-decoration:none;text-align:center;}
+  .btn-wpp{background:var(--verde-wpp);color:#fff;}
+  .btn-wpp:hover{background:#1eb955;}
+  .btn-cal{background:var(--azul-claro);color:#fff;}
+  .btn-cal:hover{background:#255ea6;}
+  .btn-apple{background:#111;color:#fff;}
+  .btn-apple:hover{background:#000;}
+  .btn-ghost{background:#eef2f7;color:var(--azul);}
+  .pasos{font-size:.85rem;color:var(--gris);margin-top:18px;line-height:1.5;}
+  footer{text-align:center;font-size:.78rem;color:var(--gris);padding:0 16px 30px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-wrap"><img class="logo-img" src="data:image/png;base64,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" alt="ISM · International Scholastic Model"></div>
+  <h1>Citas · DACI</h1>
+  <p>Departamento de Acompañamiento y Cuidado Integral · Padres de familia y estudiantes</p>
+</header>
+
+<div class="wrap">
+  <!-- FORMULARIO -->
+  <form id="form" class="card" novalidate>
+    <label>Campus <span class="req">*</span></label>
+    <div id="campusTabs" class="campus-tabs"></div>
+    <div class="err-msg" id="campusErr">Selecciona un campus.</div>
+
+    <label>Soy <span class="req">*</span></label>
+    <select id="rol">
+      <option value="">Selecciona…</option>
+      <option value="Padre/Madre de familia">Padre / Madre de familia</option>
+      <option value="Estudiante">Estudiante</option>
+      <option value="Tutor/Acudiente">Tutor / Acudiente</option>
+    </select>
+    <div class="err-msg">Selecciona una opción.</div>
+
+    <label>Tu nombre completo <span class="req">*</span></label>
+    <input id="nombre" type="text" placeholder="Ej. María López" />
+    <div class="err-msg">Escribe tu nombre.</div>
+
+    <div class="row">
+      <div>
+        <label>Nombre del estudiante <span class="req">*</span></label>
+        <input id="estudiante" type="text" placeholder="Ej. Juan López" />
+        <div class="err-msg">Escribe el nombre del estudiante.</div>
+      </div>
+      <div>
+        <label>Grado / Curso</label>
+        <input id="grado" type="text" placeholder="Ej. PEP" />
+        <div class="err-msg"></div>
+      </div>
+    </div>
+
+    <label>Tu WhatsApp <span class="req">*</span></label>
+    <input id="tel" type="tel" placeholder="Ej. +593 99 123 4567" />
+    <div class="err-msg">Escribe un número de contacto.</div>
+
+    <label>Motivo de la cita <span class="req">*</span></label>
+    <textarea id="motivo" placeholder="Cuéntanos brevemente el motivo (académico, emocional, orientación vocacional, etc.)"></textarea>
+    <div class="err-msg">Describe brevemente el motivo.</div>
+
+    <label>Fecha <span class="req">*</span></label>
+    <input id="fecha" type="date" />
+    <div class="err-msg">Selecciona una fecha válida (lunes a viernes).</div>
+    <div class="hint">Solo se atienden citas de lunes a viernes.</div>
+
+    <label>Horario disponible <span class="req">*</span></label>
+    <div id="slots" class="slots"></div>
+    <div class="err-msg" id="slotErr">Selecciona un horario.</div>
+    <div class="leyenda">
+      <span><i class="punto libre"></i> Libre</span>
+      <span><i class="punto ocupado"></i> Ocupado</span>
+    </div>
+    <div class="hint">Elige primero una fecha. Cada cita dura <span id="dur">45</span> minutos.</div>
+
+    <button type="submit" class="btn btn-primary">Agendar cita</button>
+  </form>
+
+  <!-- CONFIRMACIÓN -->
+  <div id="confirm" class="card">
+    <div class="check">✓</div>
+    <h2 style="text-align:center;margin:0 0 4px;color:var(--azul);">¡Cita lista para confirmar!</h2>
+    <p style="text-align:center;color:var(--gris);margin:0;">Completa los 2 pasos para confirmar tu cita.</p>
+
+    <div class="resumen" id="resumen"></div>
+
+    <div class="actions">
+      <p style="font-weight:700;margin:0 0 2px;color:var(--azul);">Paso 1 — Envía tu confirmación por WhatsApp</p>
+      <a id="wppLink" class="btn btn-wpp" target="_blank" rel="noopener">📲 Enviar WhatsApp al DACI</a>
+
+      <p style="font-weight:700;margin:18px 0 2px;color:var(--azul);">Paso 2 — Guarda la cita en tu calendario</p>
+      <a id="icsLink" class="btn btn-apple" download="cita-daci.ics"> Agregar a mi iPhone (Apple Calendar)</a>
+      <a id="calLink" class="btn btn-cal" target="_blank" rel="noopener">📅 Agregar a Google Calendar</a>
+
+      <button id="otra" class="btn btn-ghost" type="button">Agendar otra cita</button>
+    </div>
+
+    <p class="pasos">Al enviar el WhatsApp, el DACI recibirá tu solicitud y quedará agendada. El evento de calendario incluye al DACI como invitado, por lo que también aparecerá en su agenda.</p>
+  </div>
+
+  <footer>
+    ISM · DACI (Departamento de Acompañamiento y Cuidado Integral) · Este formulario genera una solicitud de cita que debe confirmarse por WhatsApp.
+  </footer>
+</div>
+
+<script>
+/* ====================================================================
+   CONFIGURACIÓN — Omar, edita estos valores con tus datos reales
+   ==================================================================== */
+const CONFIG = {
+  // Enrutamiento POR CAMPUS. Cada campus tiene su propio WhatsApp y correo de calendario.
+  // WhatsApp en formato internacional SIN "+", espacios ni guiones.
+  // Ecuador: 593 (país) + celular sin el 0 inicial.  Ej: celular 09XXXXXXXX -> 5939XXXXXXXX
+  CAMPUS: {
+    // Tu número real (Omar). +593 98 442 8706 -> 593984428706
+    "Campus Quito": { WHATSAPP: "593984428706", EMAIL: "o.carmonar@gmail.com" },
+    // TEMPORAL: aún usa tu número mientras consigues autorización del número real del campus.
+    "Campus West":  { WHATSAPP: "593984428706", EMAIL: "o.carmonar@gmail.com" },
+    // TEMPORAL: aún usa tu número mientras consigues autorización del número real del campus.
+    "Campus North": { WHATSAPP: "593984428706", EMAIL: "o.carmonar@gmail.com" },
+  },
+
+  // Zona horaria (formato IANA). Ecuador continental:
+  ZONA_HORARIA: "America/Guayaquil",
+
+  // Duración de cada cita en minutos.
+  DURACION_MIN: 45,
+
+  // Horarios de atención (formato "HH:MM", 24h). Ajusta a tu disponibilidad real.
+  HORARIOS: ["08:00","09:00","10:00","11:00","12:00","13:00","14:00"],
+
+  // Horarios YA OCUPADOS: se pintan en ROJO y no se pueden elegir. El resto sale en VERDE.
+  // Formato EXACTO de cada entrada: "YYYY-MM-DD HH:MM" (fecha, espacio, hora).
+  // Ejemplo (quita el // para activar):
+  OCUPADOS: [
+    // "2026-08-10 09:00",
+    // "2026-08-10 11:00",
+  ],
+
+  // Nombre de la escuela / área para el título del evento.
+  ESCUELA: "ISM",
+};
+/* ==================================================================== */
+
+document.getElementById("dur").textContent = CONFIG.DURACION_MIN;
+
+const form = document.getElementById("form");
+const fechaInput = document.getElementById("fecha");
+const slotsBox = document.getElementById("slots");
+let slotSel = null;
+let campusSel = null;
+
+// ---- Pestañas de campus ----
+const campusBox = document.getElementById("campusTabs");
+Object.keys(CONFIG.CAMPUS).forEach(nombre=>{
+  const t = document.createElement("div");
+  t.className = "campus-tab";
+  t.textContent = nombre;
+  t.dataset.campus = nombre;
+  t.addEventListener("click", ()=>{
+    document.querySelectorAll(".campus-tab.sel").forEach(x=>x.classList.remove("sel"));
+    t.classList.add("sel");
+    campusSel = nombre;
+    document.getElementById("campusErr").style.display = "none";
+  });
+  campusBox.appendChild(t);
+});
+
+// Fecha mínima = hoy
+const hoy = new Date();
+fechaInput.min = hoy.toISOString().split("T")[0];
+
+function esFinDeSemana(valor){
+  // valor "YYYY-MM-DD" -> interpretar como fecha local
+  const [y,m,d] = valor.split("-").map(Number);
+  const dia = new Date(y, m-1, d).getDay(); // 0=dom, 6=sáb
+  return dia === 0 || dia === 6;
+}
+
+function pintarSlots(){
+  slotsBox.innerHTML = "";
+  slotSel = null;
+  const fecha = fechaInput.value;
+  CONFIG.HORARIOS.forEach(h=>{
+    const el = document.createElement("div");
+    el.className = "slot";
+    el.textContent = h;
+    el.dataset.hora = h;
+    // Ocupado si la combinación exacta "YYYY-MM-DD HH:MM" está en CONFIG.OCUPADOS
+    const ocupado = fecha && CONFIG.OCUPADOS.includes(`${fecha} ${h}`);
+    if(ocupado){
+      el.classList.add("taken");
+      el.title = "Horario ocupado";
+    } else {
+      el.classList.add("libre");
+      el.addEventListener("click", ()=>{
+        document.querySelectorAll(".slot.sel").forEach(s=>{ s.classList.remove("sel"); s.classList.add("libre"); });
+        el.classList.remove("libre");
+        el.classList.add("sel");
+        slotSel = h;
+        document.getElementById("slotErr").style.display = "none";
+      });
+    }
+    slotsBox.appendChild(el);
+  });
+}
+pintarSlots();
+
+// Al cambiar la fecha, se repintan los horarios según su ocupación ese día.
+fechaInput.addEventListener("change", pintarSlots);
+
+// ---- Validación de un campo simple ----
+function marcar(input, ok){
+  const wrap = input.closest("div,form");
+  // El mensaje de error es el siguiente hermano .err-msg
+  let msg = input.nextElementSibling;
+  while(msg && !msg.classList.contains("err-msg")) msg = msg.nextElementSibling;
+  if(msg) msg.style.display = ok ? "none" : "block";
+  input.classList.toggle("field-bad-input", !ok);
+}
+
+function pad(n){return String(n).padStart(2,"0");}
+
+// Construye "YYYYMMDDTHHMMSS" a partir de fecha (YYYY-MM-DD) y hora (HH:MM) + minutos a sumar
+function fmtCal(fecha, hora, addMin){
+  const [y,m,d] = fecha.split("-").map(Number);
+  const [hh,mm] = hora.split(":").map(Number);
+  let dt = new Date(y, m-1, d, hh, mm + (addMin||0), 0);
+  return `${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+}
+
+function fechaLegible(fecha, hora){
+  const [y,m,d] = fecha.split("-").map(Number);
+  const [hh,mm] = hora.split(":").map(Number);
+  const dt = new Date(y, m-1, d, hh, mm);
+  return dt.toLocaleDateString("es-EC",{weekday:"long",day:"numeric",month:"long",year:"numeric"})
+       + " · " + dt.toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"});
+}
+
+form.addEventListener("submit", (e)=>{
+  e.preventDefault();
+
+  const rol = document.getElementById("rol");
+  const nombre = document.getElementById("nombre");
+  const estudiante = document.getElementById("estudiante");
+  const tel = document.getElementById("tel");
+  const motivo = document.getElementById("motivo");
+
+  let valido = true;
+  const check = (input, cond)=>{ marcar(input, cond); if(!cond) valido=false; };
+
+  // Campus
+  if(!campusSel){ document.getElementById("campusErr").style.display="block"; valido=false; }
+
+  check(rol, rol.value !== "");
+  check(nombre, nombre.value.trim().length >= 2);
+  check(estudiante, estudiante.value.trim().length >= 2);
+  check(tel, tel.value.trim().length >= 6);
+  check(motivo, motivo.value.trim().length >= 5);
+
+  // Fecha
+  const fechaOk = fechaInput.value !== "" && !esFinDeSemana(fechaInput.value);
+  marcar(fechaInput, fechaOk); if(!fechaOk) valido=false;
+
+  // Slot
+  if(!slotSel){ document.getElementById("slotErr").style.display="block"; valido=false; }
+
+  if(!valido){ return; }
+
+  // ---- Datos ----
+  const grado = document.getElementById("grado").value.trim();
+  const fecha = fechaInput.value;
+  const hora = slotSel;
+  const legible = fechaLegible(fecha, hora);
+  const campusCfg = CONFIG.CAMPUS[campusSel]; // WhatsApp y correo del campus elegido
+
+  // ---- Google Calendar (action=TEMPLATE) ----
+  const inicio = fmtCal(fecha, hora, 0);
+  const fin = fmtCal(fecha, hora, CONFIG.DURACION_MIN);
+  const titulo = `DACI ${CONFIG.ESCUELA} (${campusSel}) · ${estudiante.value.trim()}`;
+  const detalle =
+    `Cita del DACI (Departamento de Acompañamiento y Cuidado Integral).\n`+
+    `Campus: ${campusSel}\n`+
+    `Solicitante: ${nombre.value.trim()} (${rol.value})\n`+
+    `Estudiante: ${estudiante.value.trim()}${grado ? " — "+grado : ""}\n`+
+    `WhatsApp: ${tel.value.trim()}\n`+
+    `Motivo: ${motivo.value.trim()}`;
+
+  const calUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE"
+    + "&text=" + encodeURIComponent(titulo)
+    + "&dates=" + inicio + "/" + fin
+    + "&ctz=" + encodeURIComponent(CONFIG.ZONA_HORARIA)
+    + "&details=" + encodeURIComponent(detalle)
+    + "&add=" + encodeURIComponent(campusCfg.EMAIL);
+
+  // ---- WhatsApp (wa.me) ----
+  const msg =
+    `Hola, DACI de ${CONFIG.ESCUELA} — ${campusSel}. `+
+    `Soy ${nombre.value.trim()} (${rol.value}). `+
+    `Quisiera confirmar una cita del DACI para el estudiante ${estudiante.value.trim()}`+
+    `${grado ? " ("+grado+")" : ""}. `+
+    `Fecha: ${legible}. `+
+    `Motivo: ${motivo.value.trim()}. `+
+    `Mi WhatsApp: ${tel.value.trim()}.`;
+  const wppUrl = "https://wa.me/" + campusCfg.WHATSAPP + "?text=" + encodeURIComponent(msg);
+
+  // ---- Apple Calendar / iPhone (.ics) ----
+  const escICS = (s)=>String(s)
+    .replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");
+  const stampUTC = ()=>{
+    const d=new Date(), p=n=>String(n).padStart(2,"0");
+    return `${d.getUTCFullYear()}${p(d.getUTCMonth()+1)}${p(d.getUTCDate())}T${p(d.getUTCHours())}${p(d.getUTCMinutes())}${p(d.getUTCSeconds())}Z`;
+  };
+  const ics = [
+    "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//ISM DACI//Citas//ES","CALSCALE:GREGORIAN","METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    "UID:"+Date.now()+"@ism-daci",
+    "DTSTAMP:"+stampUTC(),
+    "DTSTART:"+inicio,          // hora local (sin Z): Apple Calendar la toma como hora local
+    "DTEND:"+fin,
+    "SUMMARY:"+escICS(titulo),
+    "DESCRIPTION:"+escICS(detalle),
+    "END:VEVENT","END:VCALENDAR"
+  ].join("\r\n");
+  const icsUrl = URL.createObjectURL(new Blob([ics],{type:"text/calendar;charset=utf-8"}));
+  document.getElementById("icsLink").href = icsUrl;
+
+  // ---- Mostrar confirmación ----
+  document.getElementById("resumen").innerHTML =
+    `<b>Campus:</b> ${campusSel}<br>`+
+    `<b>Solicitante:</b> ${nombre.value.trim()} (${rol.value})<br>`+
+    `<b>Estudiante:</b> ${estudiante.value.trim()}${grado ? " — "+grado : ""}<br>`+
+    `<b>Fecha y hora:</b> ${legible}<br>`+
+    `<b>Duración:</b> ${CONFIG.DURACION_MIN} min<br>`+
+    `<b>Motivo:</b> ${motivo.value.trim()}`;
+
+  document.getElementById("wppLink").href = wppUrl;
+  document.getElementById("calLink").href = calUrl;
+
+  form.style.display = "none";
+  document.getElementById("confirm").style.display = "block";
+  window.scrollTo({top:0, behavior:"smooth"});
+});
+
+document.getElementById("otra").addEventListener("click", ()=>{
+  form.reset();
+  pintarSlots();
+  campusSel = null;
+  document.querySelectorAll(".campus-tab.sel").forEach(x=>x.classList.remove("sel"));
+  document.getElementById("confirm").style.display = "none";
+  form.style.display = "block";
+  window.scrollTo({top:0, behavior:"smooth"});
+});
+</script>
+</body>
+</html>
